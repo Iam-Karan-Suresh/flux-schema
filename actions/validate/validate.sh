@@ -142,7 +142,8 @@ usage() {
   echo "Validate Flux custom resources and kustomize overlays using flux-schema."
   echo ""
   echo "Options:"
-  echo "  -d, --dir <dir>             Root directory to validate (default: current directory)"
+  echo "  -d, --dir <dir>             Root directory to validate (default: current directory);"
+  echo "                              an absolute path under the current directory is made relative"
   echo "  -c, --config <file>         Path to a flux-schema config file (default: .fluxschema.yml)."
   echo "                              When the file does not exist, sensible defaults are used."
   echo "  -e, --exclude <dir>         Directory to exclude from validation and the bundle (can be repeated)"
@@ -157,6 +158,19 @@ usage() {
   echo "                              taking precedence over the config file and default flags"
 }
 
+# Strip the working directory prefix from an absolute path, so the paths
+# passed to flux-schema and written to reports are relative to the
+# repository root the CI job runs from
+cwd_rel_path() {
+  local p="${1%/}"
+  if [[ "$p" == "$PWD" ]]; then
+    p="."
+  elif [[ "$p" == "$PWD"/* ]]; then
+    p="${p#"$PWD"/}"
+  fi
+  echo "${p:-/}"
+}
+
 parse_args() {
   while [[ $# -gt 0 ]]; do
     case "$1" in
@@ -166,7 +180,7 @@ parse_args() {
           exit 1
         fi
         root_dir="${2%/}"
-        root_dir="${root_dir:-/}"
+        root_dir="$(cwd_rel_path "${root_dir:-/}")"
         shift 2
         ;;
       -c|--config)
@@ -182,7 +196,7 @@ parse_args() {
           echo "ERROR - --exclude requires a directory argument" >&2
           exit 1
         fi
-        exclude_dirs+=("./${2#./}")
+        exclude_dirs+=("./$(cwd_rel_path "${2#./}")")
         shift 2
         ;;
       -b|--output-bundle)
