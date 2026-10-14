@@ -429,16 +429,16 @@ is_non_kustomize_excluded_dir() {
 detect_excluded_dirs() {
   while IFS= read -r -d $'\0' file; do
     auto_skip_dirs+=("$(dirname "$file")")
-  done < <(find "$root_dir" -mindepth 1 -name '.*' -prune -o -type f -name '*.tf' -print0)
+  done < <(find "$root_dir" -mindepth 1 -name '.*' -prune -o -type f -name '*.tf' -print0 | LC_ALL=C sort -z)
 
   while IFS= read -r -d $'\0' file; do
     auto_skip_dirs+=("$(dirname "$file")")
     helm_chart_dirs+=("$(dirname "$file")")
-  done < <(find "$root_dir" -mindepth 1 -name '.*' -prune -o -type f -name "$helm_config" -print0)
+  done < <(find "$root_dir" -mindepth 1 -name '.*' -prune -o -type f -name "$helm_config" -print0 | LC_ALL=C sort -z)
 
   while IFS= read -r -d $'\0' file; do
     kustomize_dirs+=("$(dirname "$file")")
-  done < <(find "$root_dir" -mindepth 1 -name '.*' -prune -o -type f "${kustomize_config[@]}" -print0)
+  done < <(find "$root_dir" -mindepth 1 -name '.*' -prune -o -type f "${kustomize_config[@]}" -print0 | LC_ALL=C sort -z)
 }
 
 # Collect the kustomize bases and components found by 'flux-schema discover'
@@ -499,7 +499,7 @@ validate_kubernetes_manifests() {
       continue
     fi
     files+=("$file")
-  done < <(find "$root_dir" -mindepth 1 -name '.*' -prune -o -type f \( -name '*.yaml' -o -name '*.yml' \) -print0)
+  done < <(find "$root_dir" -mindepth 1 -name '.*' -prune -o -type f \( -name '*.yaml' -o -name '*.yml' \) -print0 | LC_ALL=C sort -z)
   if [[ ${#files[@]} -gt 0 ]]; then
     if [[ -n "$bundle_file" ]]; then
       for file in "${files[@]}"; do
@@ -555,7 +555,7 @@ validate_kustomize_overlays() {
         sed '1d' <<< "$build_output" | bundle_append "kustomize-overlay: $(rel_path "$overlay")"
       fi
     fi
-  done < <(find "$root_dir" -mindepth 1 -name '.*' -prune -o -type f "${kustomize_config[@]}" -print0)
+  done < <(find "$root_dir" -mindepth 1 -name '.*' -prune -o -type f "${kustomize_config[@]}" -print0 | LC_ALL=C sort -z)
 }
 
 validate_helm_charts() {

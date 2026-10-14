@@ -117,6 +117,17 @@ jobs:
             --schema-location ./catalog/latest | tee "${RUNNER_TEMP}/bases-test.log"
           grep -Fqx "INFO - Validating kustomize overlay ${RUNNER_TEMP}/bases-test/overlay" "${RUNNER_TEMP}/bases-test.log"
           grep -Fqx "INFO - Skipping kustomize base ${RUNNER_TEMP}/bases-test/base" "${RUNNER_TEMP}/bases-test.log"
+      - name: Test validate action result order
+        run: |
+          mkdir -p "${RUNNER_TEMP}/order-test"
+          for name in c a d b; do
+            printf 'apiVersion: v1\nkind: ConfigMap\nmetadata:\n  name: %s\n' "$name" \
+              > "${RUNNER_TEMP}/order-test/${name}.yaml"
+          done
+          ./actions/validate/validate.sh -d "${RUNNER_TEMP}/order-test" -- \
+            -v --schema-location ./catalog/latest | grep -F ' is valid' > "${RUNNER_TEMP}/order-test.log"
+          [[ "$(wc -l < "${RUNNER_TEMP}/order-test.log")" -eq 4 ]]
+          LC_ALL=C sort -c "${RUNNER_TEMP}/order-test.log"
       - name: Build Docker image
         run: make docker-build
       - name: Run Docker smoke test
