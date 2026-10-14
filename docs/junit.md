@@ -17,6 +17,10 @@ failed resource and validation message available for inspection.
 
 For resources rendered by a kustomize build, the testcase `file` is the
 resource's `origin` when it has one, otherwise the built directory.
+Paths are written as passed on the command line; pass paths relative to the
+repository root so CI systems can link failures to files. The
+[validate action](../actions/validate/README.md) script rewrites an absolute
+`--dir` under the working directory to a relative path.
 
 **Warning:** The JUnit XML format is not standardized. There is no single
 formal standard for the JUnit XML format, and CI systems
