@@ -421,6 +421,16 @@
                               ],
                               "x-kubernetes-list-type": "atomic"
                             },
+                            "protocol": {
+                              "enum": [
+                                "PROXY",
+                                "TCP"
+                              ],
+                              "type": [
+                                "string",
+                                "null"
+                              ]
+                            },
                             "subnets": {
                               "additionalProperties": false,
                               "properties": {
@@ -1644,6 +1654,16 @@
                                 "null"
                               ],
                               "x-kubernetes-list-type": "atomic"
+                            },
+                            "protocol": {
+                              "enum": [
+                                "PROXY",
+                                "TCP"
+                              ],
+                              "type": [
+                                "string",
+                                "null"
+                              ]
                             },
                             "subnets": {
                               "additionalProperties": false,
