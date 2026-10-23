@@ -1,10 +1,10 @@
 module github.com/fluxcd/flux-schema
 
-go 1.26.0
+go 1.27.0
 
 require (
-	github.com/fluxcd/pkg/envsubst v1.8.0
-	github.com/fluxcd/pkg/tar v1.2.0
+	github.com/fluxcd/pkg/envsubst v1.9.0
+	github.com/fluxcd/pkg/tar v1.4.0
 	github.com/google/go-cmp v0.7.0
 	github.com/hashicorp/go-retryablehttp v0.7.8
 	github.com/onsi/gomega v1.44.0
@@ -27,7 +27,7 @@ require (
 	github.com/beorn7/perks v1.0.1 // indirect
 	github.com/blang/semver/v4 v4.0.0 // indirect
 	github.com/cespare/xxhash/v2 v2.3.0 // indirect
-	github.com/cyphar/filepath-securejoin v0.6.1 // indirect
+	github.com/cyphar/filepath-securejoin v0.7.0 // indirect
 	github.com/davecgh/go-spew v1.1.2-0.20180830191138-d8f796af33cc // indirect
 	github.com/fxamacker/cbor/v2 v2.9.1 // indirect
 	github.com/go-errors/errors v1.4.2 // indirect
