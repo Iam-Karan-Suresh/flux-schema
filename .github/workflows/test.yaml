@@ -72,6 +72,7 @@ jobs:
           [[ "$(grep -Fc 'host: app.example.com' "${RUNNER_TEMP}/bundle.yaml")" -ge 2 ]]
       - name: Test validate action skips kustomize bases
         run: |
+          set -o pipefail
           mkdir -p "${RUNNER_TEMP}/bases-test/base" "${RUNNER_TEMP}/bases-test/overlay"
           cat << 'EOF' > "${RUNNER_TEMP}/bases-test/base/deployment.yaml"
           apiVersion: apps/v1
@@ -119,6 +120,7 @@ jobs:
           grep -Fqx "INFO - Skipping kustomize base ${RUNNER_TEMP}/bases-test/base" "${RUNNER_TEMP}/bases-test.log"
       - name: Test validate action result order
         run: |
+          set -o pipefail
           mkdir -p "${RUNNER_TEMP}/order-test"
           for name in c a d b; do
             printf 'apiVersion: v1\nkind: ConfigMap\nmetadata:\n  name: %s\n' "$name" \
@@ -139,6 +141,23 @@ jobs:
             --schema-location ./catalog/latest -o junit -d "${RUNNER_TEMP}/abs-test-report"
           grep -Fq 'file="abs-test/apps/app.yaml"' "${RUNNER_TEMP}"/abs-test-report/*.xml
           rm -rf "${GITHUB_WORKSPACE}/abs-test"
+      - name: Test validate action excludes kustomize overlays
+        run: |
+          set -o pipefail
+          mkdir -p "${RUNNER_TEMP}/exclude-test/app" "${RUNNER_TEMP}/exclude-test/skip"
+          printf 'apiVersion: v1\nkind: ConfigMap\nmetadata:\n  name: app\n' \
+            > "${RUNNER_TEMP}/exclude-test/app/app.yaml"
+          printf 'resources:\n  - app.yaml\n' > "${RUNNER_TEMP}/exclude-test/app/kustomization.yaml"
+          printf 'apiVersion: v1\nkind: Unknown\n' > "${RUNNER_TEMP}/exclude-test/skip/bad.yaml"
+          printf 'resources:\n  - bad.yaml\n' > "${RUNNER_TEMP}/exclude-test/skip/kustomization.yaml"
+          ./actions/validate/validate.sh -d "${RUNNER_TEMP}/exclude-test" \
+            -e "${RUNNER_TEMP}/exclude-test/skip" -- \
+            --schema-location ./catalog/latest | tee "${RUNNER_TEMP}/exclude-test.log"
+          grep -Fqx "INFO - Validating kustomize overlay ${RUNNER_TEMP}/exclude-test/app" "${RUNNER_TEMP}/exclude-test.log"
+          if grep -Fq "exclude-test/skip" "${RUNNER_TEMP}/exclude-test.log"; then
+            echo "expected the excluded overlay to be skipped"
+            exit 1
+          fi
       - name: Build Docker image
         run: make docker-build
       - name: Run Docker smoke test
