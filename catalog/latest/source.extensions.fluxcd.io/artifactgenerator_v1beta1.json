@@ -34,6 +34,9 @@
                       "pattern": "^@([a-z0-9]([a-z0-9_-]*[a-z0-9])?)/(.*)$",
                       "type": "string"
                     },
+                    "optional": {
+                      "type": "boolean"
+                    },
                     "strategy": {
                       "enum": [
                         "Overwrite",
@@ -58,9 +61,18 @@
                 "minItems": 1,
                 "type": "array"
               },
-              "name": {
-                "maxLength": 253,
+              "inputsFrom": {
+                "maxLength": 1024,
                 "minLength": 1,
+                "pattern": "^@([a-z0-9]([a-z0-9_-]*[a-z0-9])?)/(.*)$",
+                "type": "string"
+              },
+              "name": {
+                "maxLength": 1024,
+                "type": "string"
+              },
+              "namespace": {
+                "maxLength": 1024,
                 "type": "string"
               },
               "originRevision": {
@@ -102,9 +114,118 @@
           },
           "type": "object"
         },
+        "managedNamespaces": {
+          "additionalProperties": false,
+          "properties": {
+            "allowedNames": {
+              "items": {
+                "type": "string"
+              },
+              "minItems": 1,
+              "type": "array"
+            },
+            "metadata": {
+              "additionalProperties": false,
+              "properties": {
+                "from": {
+                  "items": {
+                    "additionalProperties": false,
+                    "properties": {
+                      "annotations": {
+                        "additionalProperties": {
+                          "type": "string"
+                        },
+                        "type": "object"
+                      },
+                      "labels": {
+                        "additionalProperties": {
+                          "type": "string"
+                        },
+                        "type": "object"
+                      },
+                      "namespace": {
+                        "maxLength": 63,
+                        "pattern": "^(\\*|[a-z0-9]([-a-z0-9]*[a-z0-9])?)$",
+                        "type": "string"
+                      },
+                      "strategy": {
+                        "enum": [
+                          "Reset",
+                          "Override",
+                          "Merge"
+                        ],
+                        "type": "string"
+                      }
+                    },
+                    "required": [
+                      "namespace",
+                      "strategy"
+                    ],
+                    "type": "object"
+                  },
+                  "type": "array"
+                },
+                "fromSource": {
+                  "additionalProperties": false,
+                  "properties": {
+                    "allowedAnnotations": {
+                      "additionalProperties": {
+                        "type": "string"
+                      },
+                      "type": "object"
+                    },
+                    "allowedLabels": {
+                      "additionalProperties": {
+                        "type": "string"
+                      },
+                      "type": "object"
+                    },
+                    "path": {
+                      "maxLength": 1024,
+                      "minLength": 1,
+                      "pattern": "^@([a-z0-9]([a-z0-9_-]*[a-z0-9])?)/(.*)$",
+                      "type": "string"
+                    }
+                  },
+                  "required": [
+                    "path"
+                  ],
+                  "type": "object",
+                  "x-kubernetes-validations": [
+                    {
+                      "message": "at least one annotation or label must be set",
+                      "rule": "(has(self.allowedAnnotations) && size(self.allowedAnnotations) > 0) || (has(self.allowedLabels) && size(self.allowedLabels) > 0)"
+                    }
+                  ]
+                }
+              },
+              "type": "object",
+              "x-kubernetes-validations": [
+                {
+                  "message": "either fromSource or at least one from operation must be set",
+                  "rule": "has(self.fromSource) || (has(self.from) && size(self.from) > 0)"
+                }
+              ]
+            },
+            "prune": {
+              "type": "boolean"
+            }
+          },
+          "required": [
+            "allowedNames",
+            "prune"
+          ],
+          "type": "object"
+        },
         "pathPattern": {
           "maxLength": 1024,
           "pattern": "^@([a-z0-9]([a-z0-9_-]*[a-z0-9])?)/(.*)$",
+          "type": "string"
+        },
+        "serviceAccountName": {
+          "maxLength": 63,
+          "minLength": 1,
+          "pattern": "^[a-z0-9]([-a-z0-9]*[a-z0-9])?$",
           "type": "string"
         },
         "sources": {
@@ -158,7 +279,11 @@
       "x-kubernetes-validations": [
         {
           "message": "artifact names must be valid Kubernetes object names when pathPattern is not set",
-          "rule": "has(self.pathPattern) && size(self.pathPattern) > 0 || self.artifacts.all(a, a.name.matches('^[a-z0-9]([-a-z0-9]*[a-z0-9])?(\\\\.[a-z0-9]([-a-z0-9]*[a-z0-9])?)*$'))"
+          "rule": "has(self.pathPattern) && size(self.pathPattern) > 0 || self.artifacts.all(a, a.name.matches('^[a-z0-9]([-a-z0-9]*[a-z0-9])?(\\\\.[a-z0-9]([-a-z0-9]*[a-z0-9])?)*$') && a.name.size() <= 253)"
+        },
+        {
+          "message": "artifact namespaces must be valid Kubernetes namespaces when pathPattern is not set",
+          "rule": "has(self.pathPattern) && size(self.pathPattern) > 0 || self.artifacts.all(a, !has(a.__namespace__) || (a.__namespace__.matches('^[a-z0-9]([-a-z0-9]*[a-z0-9])?$') && a.__namespace__.size() <= 63))"
         }
       ]
     },
@@ -223,6 +348,13 @@
               "filename": {
                 "type": "string"
               },
+              "kind": {
+                "enum": [
+                  "ExternalArtifact",
+                  "Namespace"
+                ],
+                "type": "string"
+              },
               "name": {
                 "type": "string"
               },
@@ -232,9 +364,7 @@
             },
             "required": [
               "digest",
-              "filename",
-              "name",
-              "namespace"
+              "name"
             ],
             "type": "object"
           },

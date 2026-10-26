@@ -127,6 +127,12 @@
             "type": "object"
           },
           "type": "array"
+        },
+        "exportedInputs": {
+          "additionalProperties": {
+            "x-kubernetes-preserve-unknown-fields": true
+          },
+          "type": "object"
         }
       },
       "type": "object"
