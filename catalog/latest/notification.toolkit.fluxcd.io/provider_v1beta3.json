@@ -111,7 +111,9 @@
             "datadog",
             "nats",
             "zulip",
-            "otel"
+            "otel",
+            "zoom",
+            "incident.io"
           ],
           "type": "string"
         },

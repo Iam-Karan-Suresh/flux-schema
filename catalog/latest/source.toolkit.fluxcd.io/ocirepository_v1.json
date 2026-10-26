@@ -51,7 +51,6 @@
           "type": "object"
         },
         "provider": {
-          "default": "generic",
           "enum": [
             "generic",
             "aws",
@@ -109,7 +108,6 @@
           "type": "boolean"
         },
         "timeout": {
-          "default": "60s",
           "pattern": "^([0-9]+(\\.[0-9]+)?(ms|s|m))+$",
           "type": "string"
         },
@@ -178,10 +176,6 @@
           "type": "object"
         }
       },
-      "required": [
-        "interval",
-        "url"
-      ],
       "type": "object"
     },
     "status": {
@@ -304,6 +298,9 @@
           },
           "type": "object"
         },
+        "sourceVerificationFingerprint": {
+          "type": "string"
+        },
         "url": {
           "type": "string"
         }
@@ -311,5 +308,15 @@
       "type": "object"
     }
   },
-  "type": "object"
+  "type": "object",
+  "x-kubernetes-validations": [
+    {
+      "message": "spec.url is required",
+      "rule": "has(self.spec) && has(self.spec.url)"
+    },
+    {
+      "message": "spec.interval is required",
+      "rule": "has(self.spec) && has(self.spec.interval)"
+    }
+  ]
 }

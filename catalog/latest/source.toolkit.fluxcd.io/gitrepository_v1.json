@@ -357,6 +357,9 @@
           },
           "type": "array"
         },
+        "sourceVerificationFingerprint": {
+          "type": "string"
+        },
         "sourceVerificationMode": {
           "type": "string"
         }
